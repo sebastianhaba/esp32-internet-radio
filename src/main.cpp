@@ -20,8 +20,6 @@
 #define TFT_RST   D3
 #define TFT_CS    D4
 
-const char* ssid = "put-your-ssid";
-const char* password = "put-your-password";
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;      // Polska to GMT+1 (3600 sekund)
 const int   daylightOffset_sec = 3600;
@@ -46,18 +44,29 @@ enum EncEvent {
 
 QueueHandle_t encQueue;
 
-void setup() {
-  // put your setup code here, to run once:
-  Audio::audio_info_callback = my_audio_info;
 
+void my_audio_info(Audio::msg_t m);
+
+void taskRotary(void* p);
+
+void handleEvent(uint8_t ev);
+
+String toAscii(String text);
+
+String getLocalTime();
+
+void draw();
+
+void setup() {
   Serial.begin(115200);
-  delay(2000);
+  delay(2000); 
 
   Serial.println("\n===== START =====");
   Serial.print("Total PSRAM: ");
   Serial.println(ESP.getPsramSize());
   Serial.print("Free PSRAM: ");
   Serial.println(ESP.getFreePsram());
+
 
   Serial.println("Initialize lcd");
   SPI.begin(TFT_SCK, -1, TFT_MOSI, TFT_CS);
@@ -72,7 +81,7 @@ void setup() {
   Serial.println("Connecting to wifi");
   WiFi.disconnect();
   WiFi.mode(WIFI_MODE_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -87,13 +96,11 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   Serial.println("Initialize I2S...");
+  Audio::audio_info_callback = my_audio_info;
   audio.setPinout(I2S_BCLK, I2S_LRC, IS2_DOUT);
   audio.setVolume(12);
 
-  Serial.println("Audio initialized");
   Serial.println("Try to play stream");
-
-
   audio.connecttohost("http://stream.nowyswiat.online/mp3");
 }
 
