@@ -1,9 +1,5 @@
-Oto pełny README w jednym bloku do skopiowania:
-
-```markdown
 # ESP32 Internet Radio / Radio Internetowe ESP32
 
----
 
 ## 🇵🇱 Polski
 
