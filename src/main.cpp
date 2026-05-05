@@ -1,15 +1,13 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include "AudioSystem.h"
+#include "RotarySystem.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
 #include <time.h>
 
 
-#define ENC_DT    D7
-#define ENC_CLK   D6
-#define ENC_SW    D5
 
 #define TFT_SCK   D0
 #define TFT_MOSI  D1
@@ -25,10 +23,9 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;      // Polska to GMT+1 (3600 sekund)
 const int   daylightOffset_sec = 3600;
 
-volatile uint32_t holdStartMs = 0;
-volatile bool buttonHolding = false;
 
 AudioSystem audioSystem;
+RotarySystem rotarySystem;
 Adafruit_ST7735 tft(TFT_CS, TFT_DC, TFT_RST);
 GFXcanvas16 canvas(160, 128);
 bool refreshScreen = true;
@@ -36,20 +33,9 @@ bool refreshScreen = true;
 
 int lastMinute = -1;
 
-enum EncEvent { 
-  EV_CW,
-  EV_CCW,
-  EV_PRESS,
-  EV_LONG 
-};
-
-QueueHandle_t encQueue;
 
 
-
-void taskRotary(void* p);
-
-void handleEvent(uint8_t ev);
+void handleEvent(RotarySystem::Event ev);
 
 String toAscii(String text);
 
@@ -74,9 +60,7 @@ void setup() {
   tft.setRotation(1);
 
 
-  Serial.println("Create encoder queue...");
-  encQueue = xQueueCreate(16, 1);
-  xTaskCreatePinnedToCore(taskRotary, "rotary", 4096, nullptr, 1, nullptr, 1);
+  rotarySystem.begin(D6, D7, D5);
 
   Serial.println("Connecting to wifi");
   WiFi.disconnect();
@@ -106,8 +90,8 @@ void loop() {
     refreshScreen = true;
   }
 
-  uint8_t ev;
-  while(xQueueReceive(encQueue, &ev, 0) == pdTRUE) {
+  RotarySystem::Event ev;
+  while(rotarySystem.popEvent(ev)) {
     handleEvent(ev);
   }
 
@@ -125,55 +109,23 @@ void loop() {
 
 
 
-void taskRotary(void* p) {
-  pinMode(ENC_CLK, INPUT_PULLUP); 
-  pinMode(ENC_DT, INPUT_PULLUP); 
-  pinMode(ENC_SW, INPUT_PULLUP); 
 
-  int lastClk = digitalRead(ENC_CLK);
-  bool lastBtn = HIGH;
-  uint32_t pressAt = 0;
 
-  for (;;) {
-    int clk = digitalRead(ENC_CLK);
-    if (clk != lastClk && clk == LOW) {
-      uint8_t e = digitalRead(ENC_DT) ? EV_CW : EV_CCW;
-      xQueueSend(encQueue, &e, 0);
-    }
-
-    lastClk = clk;
-
-    bool btn = digitalRead(ENC_SW);
-    if (btn == LOW && lastBtn == HIGH) {
-      pressAt = millis();
-      holdStartMs = pressAt;
-      buttonHolding = true;
-    }
-    if (btn == HIGH && lastBtn == LOW) {
-      buttonHolding = false;
-      uint8_t e = (millis() - pressAt > 700) ? EV_LONG : EV_PRESS;
-      xQueueSend(encQueue, &e, 0);
-    }
-    lastBtn = btn;
-    vTaskDelay(pdMS_TO_TICKS(2));
-  }
-}
-
-void handleEvent(uint8_t ev) {
-  if(ev == EV_CW) {
+void handleEvent(RotarySystem::Event ev) {
+  if(ev == RotarySystem::EV_CW) {
     Serial.println("Encoder EV_CW");
     audioSystem.volumeUp();
     refreshScreen = true;
   }
-  else if(ev == EV_CCW) {
+  else if(ev == RotarySystem::EV_CCW) {
     Serial.println("Encoder EV_CCW");
     audioSystem.volumeDown();
     refreshScreen = true;
   }
-  else if(ev == EV_PRESS) {
+  else if(ev == RotarySystem::EV_PRESS) {
     Serial.println("Encoder EV_PRESS");
   }
-  else if(ev == EV_LONG) {
+  else if(ev == RotarySystem::EV_LONG) {
     Serial.println("Encoder EV_LONG");
   }
 }
