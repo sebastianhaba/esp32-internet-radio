@@ -1,14 +1,11 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <Audio.h>
+#include "AudioSystem.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7735.h>
 
 #include <time.h>
 
-#define I2S_LRC   D8
-#define I2S_BCLK  D9
-#define IS2_DOUT  D10
 
 #define ENC_DT    D7
 #define ENC_CLK   D6
@@ -20,6 +17,10 @@
 #define TFT_RST   D3
 #define TFT_CS    D4
 
+#define PIN_I2S_LRC  D8
+#define PIN_I2S_BCLK D9
+#define PIN_I2S_DOUT D10
+
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;      // Polska to GMT+1 (3600 sekund)
 const int   daylightOffset_sec = 3600;
@@ -27,12 +28,12 @@ const int   daylightOffset_sec = 3600;
 volatile uint32_t holdStartMs = 0;
 volatile bool buttonHolding = false;
 
-Audio audio;
+AudioSystem audioSystem;
 Adafruit_ST7735 tft(TFT_CS, TFT_DC, TFT_RST);
 GFXcanvas16 canvas(160, 128);
 bool refreshScreen = true;
 
-String streamTitle = "";
+
 int lastMinute = -1;
 
 enum EncEvent { 
@@ -45,7 +46,6 @@ enum EncEvent {
 QueueHandle_t encQueue;
 
 
-void my_audio_info(Audio::msg_t m);
 
 void taskRotary(void* p);
 
@@ -95,18 +95,16 @@ void setup() {
   Serial.println("Initialize time from network");
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  Serial.println("Initialize I2S...");
-  Audio::audio_info_callback = my_audio_info;
-  audio.setPinout(I2S_BCLK, I2S_LRC, IS2_DOUT);
-  audio.setVolume(12);
-
-  Serial.println("Try to play stream");
-  audio.connecttohost("http://stream.nowyswiat.online/mp3");
+  audioSystem.begin(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  audio.loop();
+  audioSystem.loop();
+
+  if (audioSystem.titleChanged()) {
+    refreshScreen = true;
+  }
 
   uint8_t ev;
   while(xQueueReceive(encQueue, &ev, 0) == pdTRUE) {
@@ -125,18 +123,7 @@ void loop() {
   draw();
 }
 
-void my_audio_info(Audio::msg_t m) {
-    Serial.printf("%s: %s\n", m.s, m.msg);
-    if(m.e == Audio::evt_streamtitle) {
-      streamTitle = String(m.msg);
-      refreshScreen = true;
-    }
-    else if(m.e == Audio::evt_image) {
-      for(int i = 0; i < m.vec.size(); i += 2) {
-        Serial.printf("cover image:  segment %02i, pos %07lu, len %05lu\n", i / 2, m.vec[i], m.vec[i + 1]);
-      }
-    }
-}
+
 
 void taskRotary(void* p) {
   pinMode(ENC_CLK, INPUT_PULLUP); 
@@ -175,12 +162,12 @@ void taskRotary(void* p) {
 void handleEvent(uint8_t ev) {
   if(ev == EV_CW) {
     Serial.println("Encoder EV_CW");
-    audio.setVolume(min(21, audio.getVolume() + 1));
+    audioSystem.volumeUp();
     refreshScreen = true;
   }
   else if(ev == EV_CCW) {
     Serial.println("Encoder EV_CCW");
-    audio.setVolume(max(0, audio.getVolume() - 1));
+    audioSystem.volumeDown();
     refreshScreen = true;
   }
   else if(ev == EV_PRESS) {
@@ -218,7 +205,7 @@ void draw() {
   Serial.println("Refresh screen");
 
   // 6 to font size
-  int streamTitleX = (160 - (int)streamTitle.length() * 6) / 2;
+  int streamTitleX = (160 - (int)audioSystem.getStreamTitle().length() * 6) / 2;
   
   canvas.fillScreen(0x0000);
 
@@ -227,13 +214,13 @@ void draw() {
   canvas.setCursor(2, 2); // Padding 5 pikseli od lewej i góry
   canvas.print(getLocalTime());
 
-  int volPercent = map(audio.getVolume(), 0, 21, 0, 100);
+  int volPercent = audioSystem.getVolumePercent();
   canvas.drawRect(54, 2, 102, 12, ST77XX_WHITE);
   canvas.fillRect(55, 3, volPercent, 10, ST77XX_GREEN);
 
   // todo dodac scrolla
   canvas.setCursor(streamTitleX, 48);
-  canvas.print(toAscii(streamTitle));
+  canvas.print(toAscii(audioSystem.getStreamTitle()));
 
   // double buffering rysujemy na canvie i wrzucamy na lcd
   tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 160, 128);
