@@ -8,9 +8,23 @@ void PlayingScene::onEnter(SceneManager& manager) {
 void PlayingScene::draw(SceneManager& manager) {
     auto& display = manager.display();
     auto& audio   = manager.audio();
+    String title  = DisplaySystem::toAscii(audio.getStreamTitle());
 
-    if (!display.isDirty() && audio.getStreamTitle().length() > 0) {
-        return;
+    if (title != _lastTitle) {
+        _lastTitle = title;
+        _scrollPixel = 0;
+    }
+
+    int16_t textW   = (int16_t)title.length() * CHAR_W;
+    int16_t availW  = DisplaySystem::WIDTH - 2 * MARGIN;
+    bool needsScroll = (title.length() > 0 && textW > availW);
+
+    if (!needsScroll) {
+        if (!display.isDirty() && title.length() > 0) return;
+    } else {
+        uint32_t now = millis();
+        if (now - _lastFrameMs < FRAME_MS) return;
+        _lastFrameMs = now;
     }
 
     display.clear();
@@ -23,10 +37,23 @@ void PlayingScene::draw(SceneManager& manager) {
     display.drawRect(54, 2, 102, 12, ST77XX_WHITE);
     display.fillRect(55, 3, volPercent, 10, ST77XX_GREEN);
 
-    int16_t titleX = (DisplaySystem::WIDTH - (int)DisplaySystem::toAscii(audio.getStreamTitle()).length() * 6) / 2;
-    if (titleX < 0) titleX = 2;
-    display.setCursor(titleX, 48);
-    display.print(DisplaySystem::toAscii(audio.getStreamTitle()));
+    if (title.length() > 0) {
+        if (!needsScroll) {
+            int16_t titleX = (DisplaySystem::WIDTH - textW) / 2;
+            if (titleX < MARGIN) titleX = MARGIN;
+            display.setCursor(titleX, TITLE_Y);
+        } else {
+            int32_t scrollRange = textW + SCROLL_GAP;
+            _scrollPixel += SCROLL_STEP;
+            if (_scrollPixel >= scrollRange) _scrollPixel -= scrollRange;
+
+            int16_t offset = (_scrollPixel > textW - availW) ? (textW - availW) : _scrollPixel;
+            display.setTextWrap(false);
+            display.setCursor(MARGIN - offset, TITLE_Y);
+        }
+        display.print(title);
+        display.setTextWrap(true);
+    }
 
     display.flush();
 }

@@ -23,6 +23,10 @@ void DisplaySystem::setTextColor(uint16_t color) {
     _canvas.setTextColor(color);
 }
 
+void DisplaySystem::setTextWrap(bool wrap) {
+    _canvas.setTextWrap(wrap);
+}
+
 void DisplaySystem::print(const String& text) {
     _canvas.print(text);
 }
