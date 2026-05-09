@@ -10,9 +10,9 @@
 #include "SceneManager.h"
 
 Station STATIONS[] = {
-    {"Radio Nowy Swiat",        "http://stream.nowyswiat.online/mp3"},
+    {"Radio Nowy Świat",        "http://stream.nowyswiat.online/mp3"},
     {"Radio 357",               "https://stream.radio357.pl/"},
-    {"Polskie Radio Trójka",    "http://stream3.polskieradio.pl:8902/;stream.mp3"},
+    {"PR3",                     "http://stream3.polskieradio.pl:8902/;stream.mp3"},
     {"RP Main Mix",             "http://stream.radioparadise.com/aac-128"},
     {"RP Mellow Mix",           "http://stream.radioparadise.com/mellow-128"},
     {"RP Rock Mix",             "http://stream.radioparadise.com/rock-128"},

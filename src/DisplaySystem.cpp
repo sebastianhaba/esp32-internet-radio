@@ -1,10 +1,11 @@
 #include "DisplaySystem.h"
-#include "DejaVuSansMono12.h"
+#include "DejaVuSansMono6.h"
 
 void DisplaySystem::begin() {
     _tft.init();
     _tft.setRotation(1);
     _spr = new (_sprBuf) TFT_eSprite(&_tft);
+    _spr->loadFont((uint8_t*)DejaVuSansMono6);
     _spr->createSprite(WIDTH, HEIGHT);
     _dirty = true;
 }
