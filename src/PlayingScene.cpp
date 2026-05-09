@@ -8,14 +8,14 @@ void PlayingScene::onEnter(SceneManager& manager) {
 void PlayingScene::draw(SceneManager& manager) {
     auto& display = manager.display();
     auto& audio   = manager.audio();
-    String title  = DisplaySystem::toAscii(audio.getStreamTitle());
+    String title  = audio.getStreamTitle();
 
     if (title != _lastTitle) {
         _lastTitle = title;
         _scrollPixel = 0;
     }
 
-    int16_t textW   = (int16_t)title.length() * CHAR_W;
+    int16_t textW   = display.textWidth(title);
     int16_t availW  = DisplaySystem::WIDTH - 2 * MARGIN;
     bool needsScroll = (title.length() > 0 && textW > availW);
 
@@ -28,14 +28,14 @@ void PlayingScene::draw(SceneManager& manager) {
     }
 
     display.clear();
-    display.setTextColor(ST77XX_WHITE);
+    display.setTextColor(TFT_WHITE);
 
     display.setCursor(2, 2);
     display.print(manager.timeString());
 
     int volPercent = audio.getVolumePercent();
-    display.drawRect(54, 2, 102, 12, ST77XX_WHITE);
-    display.fillRect(55, 3, volPercent, 10, ST77XX_GREEN);
+    display.drawRect(54, 2, 102, 12, TFT_WHITE);
+    display.fillRect(55, 3, volPercent, 10, TFT_GREEN);
 
     if (title.length() > 0) {
         if (!needsScroll) {

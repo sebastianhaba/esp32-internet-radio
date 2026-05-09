@@ -21,7 +21,7 @@ void LoadingScene::draw(SceneManager& manager) {
     }
 
     display.clear();
-    display.setTextColor(ST77XX_WHITE);
+    display.setTextColor(TFT_WHITE);
     display.setCursor(30, 60);
     display.print("Wczytywanie...");
     display.flush();

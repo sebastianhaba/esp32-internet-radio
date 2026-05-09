@@ -1,6 +1,8 @@
 #include "StationListScene.h"
 #include "SceneManager.h"
 
+static constexpr int16_t MARGIN = 10;
+
 void StationListScene::onEnter(SceneManager& manager) {
     _selectionIndex = manager.stations().currentIndex();
     manager.display().markDirty();
@@ -13,10 +15,10 @@ void StationListScene::draw(SceneManager& manager) {
     String label = "< " + String(stations.at(_selectionIndex).name) + " >";
 
     display.clear();
-    display.setTextColor(ST77XX_WHITE);
+    display.setTextColor(TFT_WHITE);
 
-    int16_t labelX = (DisplaySystem::WIDTH - (int)label.length() * 6) / 2;
-    if (labelX < 0) labelX = 2;
+    int16_t labelX = (DisplaySystem::WIDTH - display.textWidth(label)) / 2;
+    if (labelX < MARGIN) labelX = MARGIN;
     display.setCursor(labelX, 60);
     display.print(label);
 

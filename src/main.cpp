@@ -54,12 +54,15 @@ void setup() {
     Serial.println("Initialize lcd");
     displaySystem.begin();
 
+    
     Serial.println("Initialize rotary encoder");
     rotarySystem.begin(D6, D7, D5);
 
+    /*
     Serial.println("Initialize audio");
     audioSystem.begin(PIN_I2S_BCLK, PIN_I2S_LRC, PIN_I2S_DOUT);
 
+    
     Serial.println("Connecting to wifi");
     WiFi.disconnect();
     WiFi.mode(WIFI_MODE_STA);
@@ -71,17 +74,21 @@ void setup() {
     Serial.println("\nWiFi connected");
     Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
 
+
     Serial.println("Initialize time from network");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    */
 
+    /*
     Serial.println("Play first station");
     audioSystem.play(stationManager.current().url);
+    */
 
     sceneManager.begin();
 }
 
 void loop() {
-    audioSystem.loop();
+    //audioSystem.loop();
 
     if (audioSystem.titleChanged()) {
         sceneManager.display().markDirty();

@@ -1,58 +1,81 @@
 #include "DisplaySystem.h"
+#include "DejaVuSansMono12.h"
 
 void DisplaySystem::begin() {
-    SPI.begin(PIN_TFT_SCK, -1, PIN_TFT_MOSI, PIN_TFT_CS);
-    _tft.initR(INITR_BLACKTAB);
+    Serial.println("  [lcd] init()...");
+    Serial.flush();
+    _tft.init();
+    Serial.println("  [lcd] setRotation...");
+    Serial.flush();
     _tft.setRotation(1);
+    Serial.println("  [lcd] loadFont...");
+    Serial.flush();
+    _tft.loadFont(DejaVuSansMono12);
+    Serial.println("  [lcd] fillScreen TFT_BLUE...");
+    Serial.flush();
+    _tft.fillScreen(TFT_BLUE);
+    delay(1000);
+    Serial.println("  [lcd] fillScreen TFT_RED...");
+    Serial.flush();
+    _tft.fillScreen(TFT_RED);
+    delay(1000);
+    Serial.println("  [lcd] fillScreen TFT_BLACK...");
+    Serial.flush();
+    _tft.fillScreen(TFT_BLACK);
+    Serial.println("  [lcd] OK");
+    Serial.flush();
     _dirty = true;
 }
 
 void DisplaySystem::clear() {
-    _canvas.fillScreen(0x0000);
+    _tft.fillScreen(TFT_BLACK);
 }
 
 void DisplaySystem::fillScreen(uint16_t color) {
-    _canvas.fillScreen(color);
+    _tft.fillScreen(color);
 }
 
 void DisplaySystem::setCursor(int16_t x, int16_t y) {
-    _canvas.setCursor(x, y);
+    _tft.setCursor(x, y);
 }
 
 void DisplaySystem::setTextColor(uint16_t color) {
-    _canvas.setTextColor(color);
+    _tft.setTextColor(color);
 }
 
 void DisplaySystem::setTextWrap(bool wrap) {
-    _canvas.setTextWrap(wrap);
+    _tft.setTextWrap(wrap);
 }
 
 void DisplaySystem::print(const String& text) {
-    _canvas.print(text);
+    _tft.print(text);
 }
 
 void DisplaySystem::print(int num) {
-    _canvas.print(num);
+    _tft.print(num);
+}
+
+int16_t DisplaySystem::textWidth(const String& text) {
+    return _tft.textWidth(text);
 }
 
 void DisplaySystem::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    _canvas.drawRect(x, y, w, h, color);
+    _tft.drawRect(x, y, w, h, color);
 }
 
 void DisplaySystem::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    _canvas.fillRect(x, y, w, h, color);
+    _tft.fillRect(x, y, w, h, color);
 }
 
-int16_t DisplaySystem::getCursorX() const {
-    return _canvas.getCursorX();
+int16_t DisplaySystem::getCursorX() {
+    return _tft.getCursorX();
 }
 
-int16_t DisplaySystem::getCursorY() const {
-    return _canvas.getCursorY();
+int16_t DisplaySystem::getCursorY() {
+    return _tft.getCursorY();
 }
 
 void DisplaySystem::flush() {
-    _tft.drawRGBBitmap(0, 0, _canvas.getBuffer(), WIDTH, HEIGHT);
     _dirty = false;
 }
 
@@ -62,14 +85,4 @@ void DisplaySystem::markDirty() {
 
 bool DisplaySystem::isDirty() const {
     return _dirty;
-}
-
-String DisplaySystem::toAscii(const String& text) {
-    String from = "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ";
-    String to   = "acelnoszzACELNOSZZ";
-    String result = text;
-    for (int i = 0; i < from.length(); i++) {
-        result.replace(from.substring(i, i+1), to.substring(i, i+1));
-    }
-    return result;
 }
