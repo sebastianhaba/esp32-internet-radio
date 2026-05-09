@@ -21,6 +21,7 @@ public:
     const String& getStreamTitle() const;
     bool titleChanged();
     State state() const;
+    uint16_t getVUlevel();
 
 private:
     Audio _audio;

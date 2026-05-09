@@ -60,6 +60,10 @@ AudioSystem::State AudioSystem::state() const {
     return _state;
 }
 
+uint16_t AudioSystem::getVUlevel() {
+    return _audio.getVUlevel();
+}
+
 void AudioSystem::onAudioInfo(Audio::msg_t m) {
     if (_instance) {
         _instance->handleAudioInfo(m);
