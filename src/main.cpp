@@ -44,6 +44,7 @@ String getLocalTimeStr() {
 }
 
 void setup() {
+    // fix na dziwne dzwięki na starcie
     pinMode(1, OUTPUT); digitalWrite(1, LOW); 
     pinMode(2, OUTPUT); digitalWrite(2, LOW);
     
@@ -76,7 +77,6 @@ void setup() {
 
     Serial.println("Initialize time from network");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-
 
     Serial.println("Play first station");
     audioSystem.play(stationManager.current().url);

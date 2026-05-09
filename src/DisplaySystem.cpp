@@ -4,59 +4,61 @@
 void DisplaySystem::begin() {
     _tft.init();
     _tft.setRotation(1);
-    //_tft.loadFont(DejaVuSansMono12);
+    _spr = new (_sprBuf) TFT_eSprite(&_tft);
+    _spr->createSprite(WIDTH, HEIGHT);
     _dirty = true;
 }
 
 void DisplaySystem::clear() {
-    _tft.fillScreen(TFT_BLACK);
+    _spr->fillSprite(TFT_BLACK);
 }
 
 void DisplaySystem::fillScreen(uint16_t color) {
-    _tft.fillScreen(color);
+    _spr->fillSprite(color);
 }
 
 void DisplaySystem::setCursor(int16_t x, int16_t y) {
-    _tft.setCursor(x, y);
+    _spr->setCursor(x, y);
 }
 
 void DisplaySystem::setTextColor(uint16_t color) {
-    _tft.setTextColor(color);
+    _spr->setTextColor(color);
 }
 
 void DisplaySystem::setTextWrap(bool wrap) {
-    _tft.setTextWrap(wrap);
+    _spr->setTextWrap(wrap);
 }
 
 void DisplaySystem::print(const String& text) {
-    _tft.print(text);
+    _spr->print(text);
 }
 
 void DisplaySystem::print(int num) {
-    _tft.print(num);
+    _spr->print(num);
 }
 
 int16_t DisplaySystem::textWidth(const String& text) {
-    return _tft.textWidth(text);
+    return _spr->textWidth(text);
 }
 
 void DisplaySystem::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    _tft.drawRect(x, y, w, h, color);
+    _spr->drawRect(x, y, w, h, color);
 }
 
 void DisplaySystem::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    _tft.fillRect(x, y, w, h, color);
+    _spr->fillRect(x, y, w, h, color);
 }
 
 int16_t DisplaySystem::getCursorX() {
-    return _tft.getCursorX();
+    return _spr->getCursorX();
 }
 
 int16_t DisplaySystem::getCursorY() {
-    return _tft.getCursorY();
+    return _spr->getCursorY();
 }
 
 void DisplaySystem::flush() {
+    _spr->pushSprite(0, 0);
     _dirty = false;
 }
 

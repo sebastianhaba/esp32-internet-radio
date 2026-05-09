@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
+#include <new>
 
 class DisplaySystem {
 public:
@@ -31,6 +32,8 @@ public:
 
 private:
     TFT_eSPI _tft;
+    alignas(TFT_eSprite) uint8_t _sprBuf[sizeof(TFT_eSprite)];
+    TFT_eSprite* _spr = nullptr;
     bool _dirty = true;
 };
 
