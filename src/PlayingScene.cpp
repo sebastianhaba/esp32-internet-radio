@@ -42,17 +42,27 @@ void PlayingScene::draw(SceneManager& manager) {
             int16_t titleX = (DisplaySystem::WIDTH - textW) / 2;
             if (titleX < MARGIN) titleX = MARGIN;
             display.setCursor(titleX, TITLE_Y);
+            display.print(title);
         } else {
-            int32_t scrollRange = textW + SCROLL_GAP;
+            int32_t wrapRange = textW + SCROLL_GAP;
             _scrollPixel += SCROLL_STEP;
-            if (_scrollPixel >= scrollRange) _scrollPixel -= scrollRange;
+            if (_scrollPixel >= wrapRange) _scrollPixel -= wrapRange;
 
-            int16_t offset = (_scrollPixel > textW - availW) ? (textW - availW) : _scrollPixel;
+            int16_t x1 = MARGIN - _scrollPixel;
+            int16_t x2 = x1 + textW + SCROLL_GAP;
+
             display.setTextWrap(false);
-            display.setCursor(MARGIN - offset, TITLE_Y);
+
+            display.setCursor(x1, TITLE_Y);
+            display.print(title);
+
+            if (x2 < DisplaySystem::WIDTH - MARGIN) {
+                display.setCursor(x2, TITLE_Y);
+                display.print(title);
+            }
+
+            display.setTextWrap(true);
         }
-        display.print(title);
-        display.setTextWrap(true);
     }
 
     display.flush();
