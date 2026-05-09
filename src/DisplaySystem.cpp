@@ -2,28 +2,9 @@
 #include "DejaVuSansMono12.h"
 
 void DisplaySystem::begin() {
-    Serial.println("  [lcd] init()...");
-    Serial.flush();
     _tft.init();
-    Serial.println("  [lcd] setRotation...");
-    Serial.flush();
     _tft.setRotation(1);
-    Serial.println("  [lcd] loadFont...");
-    Serial.flush();
-    _tft.loadFont(DejaVuSansMono12);
-    Serial.println("  [lcd] fillScreen TFT_BLUE...");
-    Serial.flush();
-    _tft.fillScreen(TFT_BLUE);
-    delay(1000);
-    Serial.println("  [lcd] fillScreen TFT_RED...");
-    Serial.flush();
-    _tft.fillScreen(TFT_RED);
-    delay(1000);
-    Serial.println("  [lcd] fillScreen TFT_BLACK...");
-    Serial.flush();
-    _tft.fillScreen(TFT_BLACK);
-    Serial.println("  [lcd] OK");
-    Serial.flush();
+    //_tft.loadFont(DejaVuSansMono12);
     _dirty = true;
 }
 
