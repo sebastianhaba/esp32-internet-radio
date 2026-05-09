@@ -21,6 +21,9 @@ public:
     int16_t getCursorX();
     int16_t getCursorY();
     int16_t textWidth(const String& text);
+    void setTextFont(uint8_t f);
+    void unloadFont();
+    void reloadFont();
 
     void flush();
 

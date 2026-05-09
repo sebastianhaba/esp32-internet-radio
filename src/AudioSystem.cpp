@@ -64,6 +64,14 @@ uint16_t AudioSystem::getVUlevel() {
     return _audio.getVUlevel();
 }
 
+const char* AudioSystem::getCodecname() {
+    return _audio.getCodecname();
+}
+
+uint32_t AudioSystem::getBitRate() {
+    return _audio.getBitRate();
+}
+
 void AudioSystem::onAudioInfo(Audio::msg_t m) {
     if (_instance) {
         _instance->handleAudioInfo(m);

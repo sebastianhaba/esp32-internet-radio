@@ -42,6 +42,18 @@ int16_t DisplaySystem::textWidth(const String& text) {
     return _spr->textWidth(text);
 }
 
+void DisplaySystem::setTextFont(uint8_t f) {
+    _spr->setTextFont(f);
+}
+
+void DisplaySystem::unloadFont() {
+    _spr->unloadFont();
+}
+
+void DisplaySystem::reloadFont() {
+    _spr->loadFont((uint8_t*)DejaVuSansMono6);
+}
+
 void DisplaySystem::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     _spr->drawRect(x, y, w, h, color);
 }

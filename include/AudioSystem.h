@@ -22,6 +22,8 @@ public:
     bool titleChanged();
     State state() const;
     uint16_t getVUlevel();
+    const char* getCodecname();
+    uint32_t getBitRate();
 
 private:
     Audio _audio;

@@ -1,20 +1,23 @@
 #include "PlayingScene.h"
 #include "SceneManager.h"
+#include <WiFi.h>
 
-static constexpr int16_t VU_SEG    = 4;
-static constexpr int16_t VU_GAP    = 1;
+static constexpr uint16_t COLOR_BG   = 0x39E7; // #3e3e3e
+static constexpr uint16_t COLOR_GOLD = 0xF5CD; // #f1b96a
+static constexpr uint16_t COLOR_DARK = 0x10A2; // #151515
+
+static constexpr int16_t VU_SEG    = 8;
+static constexpr int16_t VU_GAP    = 2;
 static constexpr int16_t VU_STEP   = VU_SEG + VU_GAP;
 static constexpr int16_t VU_NUM    = 15;
-static constexpr int16_t VU_BAR    = VU_NUM * VU_SEG + (VU_NUM - 1) * VU_GAP; // 74
 static constexpr int16_t VU_H      = 8;
-static constexpr int16_t VU_BAR_Y  = 108;
-static constexpr int16_t VU_GAP_LR = 10;
+static constexpr int16_t VU_MARGIN = 6;
+static constexpr int16_t VU_TOP_Y  = 65;
+static constexpr int16_t VU_BOT_Y  = 75;
 
 static void drawLadder(DisplaySystem& d, int active, int x, int y) {
     for (int i = 0; i < VU_NUM; i++) {
-        if (i >= active) break;
-        uint16_t col = i < 11 ? TFT_GREEN : i < 13 ? TFT_YELLOW : TFT_RED;
-        d.fillRect(x, y, VU_SEG, VU_H, col);
+        d.fillRect(x, y, VU_SEG, VU_H, i < active ? COLOR_GOLD : COLOR_DARK);
         x += VU_STEP;
     }
 }
@@ -33,9 +36,8 @@ void PlayingScene::draw(SceneManager& manager) {
         _scrollPixel = 0;
     }
 
-    int16_t textW   = display.textWidth(title);
     int16_t availW  = DisplaySystem::WIDTH - 2 * MARGIN;
-    bool needsScroll = (title.length() > 0 && textW > availW);
+    bool needsScroll = (title.length() > 0);
     bool needsContinuous = needsScroll || (audio.state() == AudioSystem::State::Connected);
 
     if (!needsContinuous) {
@@ -46,18 +48,55 @@ void PlayingScene::draw(SceneManager& manager) {
         _lastFrameMs = now;
     }
 
-    display.clear();
-    display.setTextColor(TFT_WHITE);
+    // --- Background ---
+    display.fillScreen(COLOR_BG);
+    display.setTextColor(COLOR_GOLD);
+
+    // --- TOP BAR (GLCD) ---
+    display.unloadFont();
+    display.setTextFont(1);
+
+    String timeStr = manager.timeString();
+    String volStr  = String(audio.getVolumePercent()) + "%";
+    String nameStr = String(manager.stations().current().name);
+
+    int16_t timeW = (int16_t)timeStr.length() * 6;
+    int16_t volW  = (int16_t)volStr.length() * 6;
+    int16_t nameW = (int16_t)nameStr.length() * 6;
 
     display.setCursor(2, 2);
-    display.print(manager.timeString());
+    display.print(timeStr);
 
-    int volPercent = audio.getVolumePercent();
-    display.drawRect(54, 2, 102, 12, TFT_WHITE);
-    display.fillRect(55, 3, volPercent, 10, TFT_GREEN);
+    display.setCursor(DisplaySystem::WIDTH - volW - 2, 2);
+    display.print(volStr);
+
+    int16_t nameX = (DisplaySystem::WIDTH - nameW) / 2;
+    if (nameX < timeW + 4) nameX = timeW + 4;
+    if (nameX + nameW > DisplaySystem::WIDTH - volW - 4) nameX = DisplaySystem::WIDTH - volW - 4 - nameW;
+    display.setCursor(nameX, 2);
+    display.print(nameStr);
+
+    // --- VU BARS ---
+    int16_t vuX = VU_MARGIN;
+    uint16_t vuRaw = audio.getVUlevel();
+    int vuL = (vuRaw & 0xFF) * VU_NUM / 256;
+    int vuR = ((vuRaw >> 8) & 0xFF) * VU_NUM / 256;
+    drawLadder(display, vuL, vuX, VU_TOP_Y);
+    drawLadder(display, vuR, vuX, VU_BOT_Y);
+
+    // --- INFO BAR ---
+    String info = WiFi.localIP().toString() + " | " + audio.getCodecname() + " | " + (audio.getBitRate() / 1000) + " kbps";
+    int16_t infoW = (int16_t)info.length() * 6;
+    display.setCursor((DisplaySystem::WIDTH - infoW) / 2, 115);
+    display.print(info);
+
+    // --- STREAM TITLE (smooth font) ---
+    display.reloadFont();
+    int16_t textW = display.textWidth(title);
+    bool needsScrollLocal = (title.length() > 0 && textW > availW);
 
     if (title.length() > 0) {
-        if (!needsScroll) {
+        if (!needsScrollLocal) {
             int16_t titleX = (DisplaySystem::WIDTH - textW) / 2;
             if (titleX < MARGIN) titleX = MARGIN;
             display.setCursor(titleX, TITLE_Y);
@@ -71,7 +110,6 @@ void PlayingScene::draw(SceneManager& manager) {
             int16_t x2 = x1 + textW + SCROLL_GAP;
 
             display.setTextWrap(false);
-
             display.setCursor(x1, TITLE_Y);
             display.print(title);
 
@@ -79,19 +117,9 @@ void PlayingScene::draw(SceneManager& manager) {
                 display.setCursor(x2, TITLE_Y);
                 display.print(title);
             }
-
             display.setTextWrap(true);
         }
     }
-
-    int16_t lx = 0;
-    int16_t rx = VU_BAR + VU_GAP_LR; // 84
-
-    uint16_t vuRaw = audio.getVUlevel();
-    int vuL = (vuRaw & 0xFF) * VU_NUM / 256;
-    int vuR = ((vuRaw >> 8) & 0xFF) * VU_NUM / 256;
-    drawLadder(display, vuL, lx, VU_BAR_Y);
-    drawLadder(display, vuR, rx, VU_BAR_Y);
 
     display.flush();
 }
