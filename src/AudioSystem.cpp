@@ -13,6 +13,9 @@ void AudioSystem::begin(uint8_t BCLK, uint8_t LRC, uint8_t DOUT) {
 
 void AudioSystem::loop() {
     _audio.loop();
+    if (_state == State::Connecting && _audio.isRunning()) {
+        _state = State::Connected;
+    }
 }
 
 void AudioSystem::volumeUp() {
@@ -42,6 +45,8 @@ bool AudioSystem::titleChanged() {
 }
 
 void AudioSystem::play(const char* url) {
+    _streamTitle = "";
+    _titleChanged = true;
     _state = State::Connecting;
     _audio.connecttohost(url);
 }
@@ -66,6 +71,8 @@ void AudioSystem::handleAudioInfo(Audio::msg_t m) {
     if (m.e == Audio::evt_streamtitle) {
         _streamTitle = String(m.msg);
         _titleChanged = true;
+        _state = State::Connected;
+    } else if (m.e == Audio::evt_name) {
         _state = State::Connected;
     } else if (m.e == Audio::evt_image) {
         for (int i = 0; i < m.vec.size(); i += 2) {
