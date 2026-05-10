@@ -18,12 +18,14 @@ public:
     void print(int num);
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    void drawHLine(int16_t x, int16_t y, int16_t size, uint16_t color);
+    void drawString(const String& text, int16_t x, int16_t y, uint8_t datum);
     int16_t getCursorX();
     int16_t getCursorY();
     int16_t textWidth(const String& text);
     void setTextFont(uint8_t f);
     void unloadFont();
-    void reloadFont();
+    void reloadFont(uint8_t size);
 
     void flush();
 

@@ -2,22 +2,29 @@
 #include "SceneManager.h"
 #include <WiFi.h>
 
-static constexpr uint16_t COLOR_BG   = 0x39E7; // #3e3e3e
-static constexpr uint16_t COLOR_GOLD = 0xF5CD; // #f1b96a
-static constexpr uint16_t COLOR_DARK = 0x10A2; // #151515
-
-static constexpr int16_t VU_SEG    = 8;
-static constexpr int16_t VU_GAP    = 2;
-static constexpr int16_t VU_STEP   = VU_SEG + VU_GAP;
-static constexpr int16_t VU_NUM    = 15;
-static constexpr int16_t VU_H      = 8;
-static constexpr int16_t VU_MARGIN = 6;
-static constexpr int16_t VU_TOP_Y  = 65;
-static constexpr int16_t VU_BOT_Y  = 75;
+static constexpr uint16_t COLOR_BG       = TFT_BLACK;
+static constexpr int16_t  VU_SEG         = 8;
+static constexpr int16_t  VU_GAP         = 2;
+static constexpr int16_t  VU_STEP        = VU_SEG + VU_GAP;
+static constexpr int16_t  VU_NUM         = 15;
+static constexpr int16_t  VU_H           = 8;
+static constexpr int16_t  VU_MARGIN      = 6;
+static constexpr int16_t  VU_TOP_Y       = 85;
+static constexpr int16_t  VU_BOT_Y       = 95;
+static constexpr int16_t  MARGIN         = 10;
+static constexpr int16_t  TITLE_Y        = 40;
+static constexpr int16_t  SCROLL_STEP    = 1;
+static constexpr uint16_t FRAME_MS       = 33;
+static constexpr int16_t  SCROLL_GAP     = 30;
 
 static void drawLadder(DisplaySystem& d, int active, int x, int y) {
     for (int i = 0; i < VU_NUM; i++) {
-        d.fillRect(x, y, VU_SEG, VU_H, i < active ? COLOR_GOLD : COLOR_DARK);
+        if (i < active) {
+            uint16_t col = i < 10 ? TFT_GREEN : i < 12 ? TFT_YELLOW : TFT_RED;
+            d.fillRect(x, y, VU_SEG, VU_H, col);
+        } else {
+            d.drawRect(x, y, VU_SEG, VU_H, 0x4208);
+        }
         x += VU_STEP;
     }
 }
@@ -50,19 +57,19 @@ void PlayingScene::draw(SceneManager& manager) {
 
     // --- Background ---
     display.fillScreen(COLOR_BG);
-    display.setTextColor(COLOR_GOLD);
+    display.setTextColor(TFT_WHITE);
 
     // --- TOP BAR (GLCD) ---
     display.unloadFont();
-    display.setTextFont(1);
+    display.reloadFont(5);
 
     String timeStr = manager.timeString();
     String volStr  = String(audio.getVolumePercent()) + "%";
     String nameStr = String(manager.stations().current().name);
 
-    int16_t timeW = (int16_t)timeStr.length() * 6;
-    int16_t volW  = (int16_t)volStr.length() * 6;
-    int16_t nameW = (int16_t)nameStr.length() * 6;
+    int16_t timeW = display.textWidth(timeStr);
+    int16_t volW  = display.textWidth(volStr);
+    int16_t nameW = display.textWidth(nameStr);
 
     display.setCursor(2, 2);
     display.print(timeStr);
@@ -76,6 +83,8 @@ void PlayingScene::draw(SceneManager& manager) {
     display.setCursor(nameX, 2);
     display.print(nameStr);
 
+    display.drawHLine(0, 12, DisplaySystem::WIDTH, TFT_WHITE);
+
     // --- VU BARS ---
     int16_t vuX = VU_MARGIN;
     uint16_t vuRaw = audio.getVUlevel();
@@ -86,12 +95,15 @@ void PlayingScene::draw(SceneManager& manager) {
 
     // --- INFO BAR ---
     String info = WiFi.localIP().toString() + " | " + audio.getCodecname() + " | " + (audio.getBitRate() / 1000) + " kbps";
-    int16_t infoW = (int16_t)info.length() * 6;
+    int16_t infoW = display.textWidth(info);
+
+    display.drawHLine(0, 111, DisplaySystem::WIDTH, TFT_WHITE);
     display.setCursor((DisplaySystem::WIDTH - infoW) / 2, 115);
     display.print(info);
 
     // --- STREAM TITLE (smooth font) ---
-    display.reloadFont();
+    display.unloadFont();
+    display.reloadFont(8);
     int16_t textW = display.textWidth(title);
     bool needsScrollLocal = (title.length() > 0 && textW > availW);
 
