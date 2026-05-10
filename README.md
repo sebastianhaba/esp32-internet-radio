@@ -1,144 +1,94 @@
-# ESP32 Internet Radio / Radio Internetowe ESP32
+# ESP32 Internet Radio
 
+Internetowe radio na ESP32-S3 (Seeed XIAO) z wyświetlaczem ST7735 160×128.
 
-## 🇵🇱 Polski
+**Wersja:** 0.1.0
 
-### Opis projektu
+---
 
-Proste radio internetowe oparte na module **Seeed Studio XIAO ESP32S3**.  
-Projekt odgrywa strumień audio przez sieć Wi-Fi i wyświetla informacje o stacji oraz głośności na małym wyświetlaczu TFT.  
-Aktualnie odgrywa jeden strumień: **Radio Nowy Świat** (`http://stream.nowyswiat.online/mp3`).
+## Zrzut ekranu
 
-Sterowanie odbywa się za pomocą enkodera obrotowego:
-- Obrót w prawo — zwiększenie głośności  
-- Obrót w lewo — zmniejszenie głośności  
-- Krótkie naciśnięcie — EV_PRESS (do rozbudowy)  
-- Długie naciśnięcie — EV_LONG (do rozbudowy)
+![Radio w akcji](docs/1.gif)
 
-### Sprzęt
+---
 
-- [Seeed Studio XIAO ESP32S3](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
-- Wyświetlacz TFT ST7735 (160×128)
-- Moduł DAC I2S (np. MAX98357A lub PCM5102)
-- Enkoder obrotowy z przyciskiem
+## Funkcje
 
-### Podłączenie pinów
+- Odtwarzanie strumieni MP3/AAC z internetu
+- Ekran wyboru stacji z karuzelą (długie przytrzymanie enkodera)
+- Poziome przewijanie długich tytułów utworów
+- VU Meter — wizualizacja poziomu dźwięku (L+P kanał, 15 segmentów, zielony/żółty/czerwony)
+- Regulacja głośności enkoderem
+- Wyświetlanie czasu (NTP), adresu IP, kodeka i bitrate
+- Obsługa stacji bez metadanych (np. Polskie Radio Trójka)
 
-| Peryferal  | Sygnał | Pin  |
-|------------|--------|------|
-| I2S DAC    | LRC    | D8   |
-| I2S DAC    | BCLK   | D9   |
-| I2S DAC    | DOUT   | D10  |
-| Enkoder    | DT     | D7   |
-| Enkoder    | CLK    | D6   |
-| Enkoder    | SW     | D5   |
-| TFT ST7735 | SCK    | D0   |
-| TFT ST7735 | MOSI   | D1   |
-| TFT ST7735 | DC     | D2   |
-| TFT ST7735 | RST    | D3   |
-| TFT ST7735 | CS     | D4   |
+---
 
-### Wymagania
+## Jak dodać własne stacje
 
-#### Narzędzia
+Edytuj tablicę `STATIONS` w `src/main.cpp`:
 
-Projekt korzysta z **PlatformIO**. W VS Code należy zainstalować następujące rozszerzenie:
-
-- [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
-
-#### Plik `secrets.ini`
-
-Przed kompilacją należy utworzyć plik `secrets.ini` w katalogu głównym projektu z następującą treścią:
-
-```ini
-[secrets]
-build_flags =
-    -D WIFI_SSID=\"nazwa_sieci\"
-    -D WIFI_PASS=\"haslo_wifi\"
-```
-
-Plik ten nie jest śledzony przez Git — nie należy go udostępniać publicznie.
-
-### Biblioteki
-
-- [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) — odtwarzanie audio przez I2S
-- [Adafruit ST7735 (fork bez SD)](https://github.com/sebastianhaba/Adafruit-ST7735-Library/tree/1.11.0-no-sd) — obsługa wyświetlacza TFT; użyto forka oryginalnej biblioteki Adafruit w celu usunięcia zależności od biblioteki SD
-
-### Budowanie i wgrywanie
-
-```sh
-pio run --target upload
-pio device monitor
+```cpp
+Station STATIONS[] = {
+    {"Radio Nowy Swiat", "http://stream.nowyswiat.online/mp3"},
+    {"Radio 357",        "https://stream.radio357.pl/"},
+    {"Twoja stacja",     "http://url-stacji..."},
+};
 ```
 
 ---
 
-## 🇬🇧 English
+## Jak używać
 
-### Project Description
+| Akcja | Enkoder |
+|---|---|
+| Obrót CW/CCW | Zwiększ/zmniejsz głośność |
+| Długie przytrzymanie | Przełącz ekran odtwarzania ↔ lista stacji |
+| Krótkie wciśnięcie (na liście) | Wybierz stację |
+| Obrót (na liście) | Przeglądanie stacji (karuzela) |
 
-A simple internet radio based on the **Seeed Studio XIAO ESP32S3** module.  
-The project streams audio over Wi-Fi and displays station info and volume level on a small TFT screen.  
-Currently plays a single stream: **Radio Nowy Świat** (`http://stream.nowyswiat.online/mp3`).
+---
 
-Control is handled via a rotary encoder:
-- Rotate right — increase volume  
-- Rotate left — decrease volume  
-- Short press — EV_PRESS (reserved for future use)  
-- Long press — EV_LONG (reserved for future use)
+## Zależności (PlatformIO)
 
-### Hardware
-
-- [Seeed Studio XIAO ESP32S3](https://wiki.seeedstudio.com/xiao_esp32s3_getting_started/)
-- ST7735 TFT display (160×128)
-- I2S DAC module (e.g. MAX98357A or PCM5102)
-- Rotary encoder with push button
-
-### Pin Connections
-
-| Peripheral | Signal | Pin  |
-|------------|--------|------|
-| I2S DAC    | LRC    | D8   |
-| I2S DAC    | BCLK   | D9   |
-| I2S DAC    | DOUT   | D10  |
-| Encoder    | DT     | D7   |
-| Encoder    | CLK    | D6   |
-| Encoder    | SW     | D5   |
-| TFT ST7735 | SCK    | D0   |
-| TFT ST7735 | MOSI   | D1   |
-| TFT ST7735 | DC     | D2   |
-| TFT ST7735 | RST    | D3   |
-| TFT ST7735 | CS     | D4   |
-
-### Requirements
-
-#### Tooling
-
-This project uses **PlatformIO**. Install the following VS Code extension:
-
-- [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
-
-#### secrets.ini file
-
-Before building, create a secrets.ini file in the project root with the following content:
-
-```ini
-[secrets]
-build_flags =
-    -D WIFI_SSID=\"your_network_name\"
-    -D WIFI_PASS=\"your_wifi_password\"
+```
+schreibfaul1/ESP32-audioI2S@3.4.5
+bodmer/TFT_eSPI@^2.5.43
 ```
 
-This file is excluded from version control — do not share it publicly.
+---
 
-### Libraries
+## Piny (Seeed XIAO ESP32S3)
 
-- [ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) — audio playback via I2S
-- [Adafruit ST7735 (no-SD fork)](https://github.com/sebastianhaba/Adafruit-ST7735-Library/tree/1.11.0-no-sd) — TFT display driver; a fork of the original Adafruit library with the SD dependency removed
+| Funkcja | Pin |
+|---|---|---|
+| **Wyświetlacz ST7735** | |
+| TFT SCLK | D8 |
+| TFT MOSI | D10 |
+| TFT DC | D2 |
+| TFT RST | D3 |
+| TFT CS | D4 |
+| **Wzmacniacz I2S** | |
+| I2S LRC | D0 |
+| I2S BCLK | D9 |
+| I2S DOUT | D1 |
+| **Enkoder** | |
+| ENC CLK | D6 |
+| ENC DT | D7 |
+| ENC SW | D5 |
 
-### Build & Flash
+---
 
-```sh
-pio run --target upload
-pio device monitor
+## Budowanie
+
+```bash
+pio run            # kompilacja
+pio run -t upload  # kompilacja + flash
+pio run -t monitor # Serial monitor
 ```
+
+---
+
+## Licencja
+
+MIT
