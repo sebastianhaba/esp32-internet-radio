@@ -9,6 +9,7 @@
 #include "RotarySystem.h"
 #include "DisplaySystem.h"
 #include "SceneManager.h"
+#include "WebServer.h"
 
 #define PIN_I2S_LRC  D0
 #define PIN_I2S_BCLK D9
@@ -23,6 +24,7 @@ RotarySystem    rotarySystem;
 DisplaySystem   displaySystem;
 StationManager  stationManager;
 SceneManager    sceneManager(audioSystem, stationManager, displaySystem);
+RadioWebServer  radioWeb;
 
 int lastMinute = -1;
 
@@ -82,6 +84,8 @@ void setup() {
     Serial.println("\nWiFi connected");
     Serial.printf("IP address: %s\n", WiFi.localIP().toString().c_str());
 
+    radioWeb.begin(&stationManager);
+
     Serial.println("Initialize time from network");
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
@@ -93,6 +97,7 @@ void setup() {
 
 void loop() {
     audioSystem.loop();
+    radioWeb.handleClient();
 
     if (audioSystem.titleChanged()) {
         sceneManager.display().markDirty();

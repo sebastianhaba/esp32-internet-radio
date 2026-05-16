@@ -6,6 +6,7 @@ bool StationManager::loadFromFile(fs::FS &fs, const char* path) {
     File file = fs.open(path, FILE_READ);
     if (!file || file.isDirectory()) return false;
 
+    _count = 0;
     while (file.available() && _count < MAX_STATIONS) {
         String line = file.readStringUntil('\n');
         line.trim();

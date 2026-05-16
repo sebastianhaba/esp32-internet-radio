@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ESP32 Radio Config</title>
+<style>
+body{font-family:monospace;background:#111;color:#0f0;padding:10px}
+textarea{width:100%;height:60vh;background:#222;color:#0f0;border:1px solid #0f0;
+  padding:5px;resize:vertical}
+button{padding:10px 20px;margin-top:10px;background:#0f0;color:#000;border:none;
+  cursor:pointer}
+#msg{margin-top:10px}
+</style>
+</head>
+<body>
+<h1>Radio Stations</h1>
+<form id="f">
+<textarea id="s" name="stations"></textarea>
+<br>
+<button type="submit">Save &amp; Reload</button>
+</form>
+<div id="msg"></div>
+<script>
+fetch('/stations').then(r=>r.text()).then(t=>document.getElementById('s').value=t);
+document.getElementById('f').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const r=await fetch('/save',{method:'POST',body:new URLSearchParams(new FormData(e.target))});
+ document.getElementById('msg').textContent=r.ok?'Saved and reloaded!':'Error saving';
+});
+</script>
+</body>
+</html>
