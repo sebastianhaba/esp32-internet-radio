@@ -10,16 +10,6 @@
 #include "DisplaySystem.h"
 #include "SceneManager.h"
 
-Station STATIONS[] = {
-    {"Radio Nowy Świat",        "http://stream.nowyswiat.online/mp3"},
-    {"Radio 357",               "https://stream.radio357.pl/"},
-    {"PR3",                     "http://stream3.polskieradio.pl:8902/;stream.mp3"},
-    {"RP Main Mix",             "http://stream.radioparadise.com/aac-128"},
-    {"RP Mellow Mix",           "http://stream.radioparadise.com/mellow-128"},
-    {"RP Rock Mix",             "http://stream.radioparadise.com/rock-128"},
-
-};
-
 #define PIN_I2S_LRC  D0
 #define PIN_I2S_BCLK D9
 #define PIN_I2S_DOUT D1
@@ -31,7 +21,7 @@ const int   daylightOffset_sec = 3600;
 AudioSystem     audioSystem;
 RotarySystem    rotarySystem;
 DisplaySystem   displaySystem;
-StationManager  stationManager(STATIONS, sizeof(STATIONS) / sizeof(STATIONS[0]));
+StationManager  stationManager;
 SceneManager    sceneManager(audioSystem, stationManager, displaySystem);
 
 int lastMinute = -1;
@@ -50,18 +40,27 @@ void setup() {
     pinMode(2, OUTPUT); digitalWrite(2, LOW);
     
     Serial.begin(115200);
-    delay(2000);
+    uint32_t serialStart = millis();
+    while (!Serial && (millis() - serialStart < 3000)) { delay(10); }
+    delay(100);
 
     Serial.println("\n===== START =====");
     Serial.printf("Total PSRAM: %u\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %u\n", ESP.getFreePsram());
 
     Serial.println("Initialize filesystem");
-    if (LittleFS.begin()) {
-        Serial.println("LittleFS mounted");
-    } else {
+    if (!LittleFS.begin(true, "/littlefs", 10, "littlefs")) {
         Serial.println("LittleFS mount FAILED");
+    } else {
+        Serial.println("LittleFS mounted");
     }
+
+    Serial.println("Load stations");
+    if (!stationManager.loadFromFile(LittleFS, "/stations.txt")) {
+        Serial.println("No stations file, using defaults");
+        stationManager.add("Radio Nowy Swiat",   "http://stream.nowyswiat.online/mp3");
+    }
+    Serial.printf("Loaded %u station(s)\n", stationManager.count());
 
     Serial.println("Initialize lcd");
     displaySystem.begin();

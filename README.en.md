@@ -20,21 +20,29 @@ Internet radio built on ESP32-S3 (Seeed XIAO) with ST7735 160×128 display.
 - VU Meter — audio level visualization (L+R channel, 15 segments, green/yellow/red)
 - Volume control via encoder
 - Display: time (NTP), IP address, codec name, bitrate
-- Support for stations without metadata (e.g. Polskie Radio Trójka)
+ - Support for stations without metadata (e.g. Polskie Radio Trójka)
+ - Stations managed via `data/stations.txt` on LittleFS — no recompilation needed
 
 ---
 
 ## Adding your own stations
 
-Edit the `STATIONS` array in `src/main.cpp`:
+Edit `data/stations.txt`:
 
-```cpp
-Station STATIONS[] = {
-    {"Radio Nowy Swiat", "http://stream.nowyswiat.online/mp3"},
-    {"Radio 357",        "https://stream.radio357.pl/"},
-    {"Your station",     "http://your-stream-url..."},
-};
 ```
+# Format: Station Name|Stream URL
+Radio Nowy Swiat|http://stream.nowyswiat.online/mp3
+Radio 357|https://stream.radio357.pl/
+Your station|http://your-stream-url...
+```
+
+Lines starting with `#` are comments. After editing, upload to LittleFS:
+
+```bash
+pio run -t uploadfs
+```
+
+If `stations.txt` doesn't exist, the radio falls back to built-in defaults.
 
 ---
 
@@ -82,10 +90,13 @@ bodmer/TFT_eSPI@^2.5.43
 ## Building
 
 ```bash
-pio run            # compile
-pio run -t upload  # compile + flash
-pio run -t monitor # Serial monitor
+pio run             # compile
+pio run -t upload   # compile + flash
+pio run -t uploadfs # upload files from data/ to LittleFS
+pio run -t monitor  # Serial monitor
 ```
+
+On first boot, LittleFS is automatically formatted. Files from the `data/` directory are uploaded to the LittleFS partition (4 MB).
 
 ---
 

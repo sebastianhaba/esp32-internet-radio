@@ -1,0 +1,9 @@
+# Stations for ESP32 Internet Radio
+# Format: Station Name|Stream URL
+
+Radio Nowy Swiat|http://stream.nowyswiat.online/mp3
+Radio 357|https://stream.radio357.pl/
+PR3|http://mp3.polskieradio.pl:8904/
+RP Main Mix|http://stream.radioparadise.com/aac-128
+RP Mellow Mix|http://stream.radioparadise.com/mellow-128
+RP Rock Mix|http://stream.radioparadise.com/rock-128

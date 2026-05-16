@@ -2,11 +2,15 @@
 #define STATION_MANAGER_H
 
 #include <Arduino.h>
+#include <FS.h>
 #include "Station.h"
 
 class StationManager {
 public:
-    StationManager(Station* stations, uint8_t count);
+    StationManager();
+
+    bool loadFromFile(fs::FS &fs, const char* path);
+    void add(const char* name, const char* url);
 
     void next();
     void prev();
@@ -18,8 +22,9 @@ public:
     void select(uint8_t index);
 
 private:
-    Station* _stations;
-    uint8_t  _count;
+    static constexpr uint8_t MAX_STATIONS = 20;
+    Station _stations[MAX_STATIONS];
+    uint8_t  _count = 0;
     uint8_t  _currentIndex = 0;
 };
 

@@ -1,9 +1,11 @@
 #ifndef STATION_H
 #define STATION_H
 
+#include <Arduino.h>
+
 struct Station {
-    const char* name;
-    const char* url;
+    char name[32];
+    char url[128];
 };
 
 #endif
