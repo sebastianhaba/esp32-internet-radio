@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <time.h>
+#include <LittleFS.h>
 
 #include "Station.h"
 #include "StationManager.h"
@@ -54,6 +55,13 @@ void setup() {
     Serial.println("\n===== START =====");
     Serial.printf("Total PSRAM: %u\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %u\n", ESP.getFreePsram());
+
+    Serial.println("Initialize filesystem");
+    if (LittleFS.begin()) {
+        Serial.println("LittleFS mounted");
+    } else {
+        Serial.println("LittleFS mount FAILED");
+    }
 
     Serial.println("Initialize lcd");
     displaySystem.begin();
