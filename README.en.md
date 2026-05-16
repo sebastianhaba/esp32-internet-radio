@@ -22,6 +22,7 @@ Internet radio built on ESP32-S3 (Seeed XIAO) with ST7735 160×128 display.
 - Display: time (NTP), IP address, codec name, bitrate
  - Support for stations without metadata (e.g. Polskie Radio Trójka)
  - Stations managed via `data/stations.txt` on LittleFS — no recompilation needed
+ - Web-based station editor — edit stations in the browser, save without reboot
 
 ---
 
@@ -43,6 +44,10 @@ pio run -t uploadfs
 ```
 
 If `stations.txt` doesn't exist, the radio falls back to built-in defaults.
+
+### Editing stations via Web UI
+
+Once connected to WiFi, open the radio's IP address in a browser (displayed at the bottom of the screen and in Serial Monitor). The page lets you edit the station list — click **Save & Reload** to apply changes immediately without restarting the device.
 
 ---
 

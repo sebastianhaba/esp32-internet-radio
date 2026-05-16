@@ -22,6 +22,7 @@ Internetowe radio na ESP32-S3 (Seeed XIAO) z wyświetlaczem ST7735 160×128.
 - Wyświetlanie czasu (NTP), adresu IP, kodeka i bitrate
  - Obsługa stacji bez metadanych (np. Polskie Radio Trójka)
  - Stacje konfigurowane przez plik `data/stations.txt` na LittleFS — bez rekompilacji
+ - Konfiguracja stacji przez interfejs WWW — edytor w przeglądarce, zapis bez restartu
 
 ---
 
@@ -43,6 +44,10 @@ pio run -t uploadfs
 ```
 
 Jeśli plik `stations.txt` nie istnieje, radio użyje wbudowanych stacji zapasowych.
+
+### Edycja stacji przez WWW
+
+Po połączeniu z WiFi otwórz w przeglądarce adres IP radia (widoczny na dole ekranu i w Serial Monitorze). Strona umożliwia edycję listy stacji — po kliknięciu **Save & Reload** lista jest natychmiast aktualizowana bez restartu urządzenia.
 
 ---
 
