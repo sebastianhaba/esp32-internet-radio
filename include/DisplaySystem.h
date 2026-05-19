@@ -9,22 +9,14 @@ class DisplaySystem {
 public:
     void begin();
 
-    void clear();
-    void fillScreen(uint16_t color);
-    void setCursor(int16_t x, int16_t y);
-    void setTextColor(uint16_t color);
+    void clearScreen(uint16_t color = TFT_BLACK);
     void setTextWrap(bool wrap);
-    void print(const String& text);
-    void print(int num);
+    void drawText(uint8_t x, uint8_t y, const String& text, uint16_t color = TFT_WHITE);
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void drawHLine(int16_t x, int16_t y, int16_t size, uint16_t color);
-    void drawString(const String& text, int16_t x, int16_t y, uint8_t datum);
-    int16_t getCursorX();
-    int16_t getCursorY();
+    
     int16_t textWidth(const String& text);
-    void setTextFont(uint8_t f);
-    void unloadFont();
     void reloadFont(uint8_t size);
 
     void flush();
@@ -32,8 +24,8 @@ public:
     void markDirty();
     bool isDirty() const;
 
-    static constexpr int16_t WIDTH  = 160;
-    static constexpr int16_t HEIGHT = 128;
+    static constexpr int16_t SCREEN_WIDTH  = 160;
+    static constexpr int16_t SCREEN_HEIGHT = 128;
 
 private:
     TFT_eSPI _tft;

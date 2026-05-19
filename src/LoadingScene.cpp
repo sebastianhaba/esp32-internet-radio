@@ -8,6 +8,8 @@ void LoadingScene::onEnter(SceneManager& manager) {
 }
 
 void LoadingScene::draw(SceneManager& manager) {
+    constexpr uint32_t TIMEOUT_MS = 5000;
+    
     auto& display = manager.display();
 
     if (manager.audio().state() == AudioSystem::State::Connected) {
@@ -20,10 +22,8 @@ void LoadingScene::draw(SceneManager& manager) {
         return;
     }
 
-    display.clear();
-    display.setTextColor(TFT_WHITE);
-    display.setCursor(30, 60);
-    display.print("Wczytywanie...");
+    display.clearScreen();
+    display.drawText(30, 60, "Wczytywanie...");
     display.flush();
 }
 

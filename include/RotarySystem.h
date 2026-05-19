@@ -7,7 +7,7 @@
 
 class RotarySystem {
 public:
-    enum Event { EV_CW, EV_CCW, EV_PRESS, EV_LONG };
+    enum Event { RIGHT, LEFT, CLICK, PRESS };
 
     void begin(uint8_t clkPin, uint8_t dtPin, uint8_t swPin);
     bool popEvent(Event& ev);

@@ -2,7 +2,6 @@
 #include "SceneManager.h"
 #include <WiFi.h>
 
-static constexpr uint16_t COLOR_BG       = TFT_BLACK;
 static constexpr int16_t  VU_SEG         = 8;
 static constexpr int16_t  VU_GAP         = 2;
 static constexpr int16_t  VU_STEP        = VU_SEG + VU_GAP;
@@ -17,50 +16,65 @@ static constexpr int16_t  SCROLL_STEP    = 1;
 static constexpr uint16_t FRAME_MS       = 33;
 static constexpr int16_t  SCROLL_GAP     = 30;
 
-static void drawLadder(DisplaySystem& d, int active, int x, int y) {
-    for (int i = 0; i < VU_NUM; i++) {
-        if (i < active) {
+static void drawLadder(DisplaySystem& d, int active, int x, int y) 
+{
+    for (int i = 0; i < VU_NUM; i++) 
+    {
+        if (i < active) 
+        {
             uint16_t col = i < 10 ? TFT_GREEN : i < 12 ? TFT_YELLOW : TFT_RED;
             d.fillRect(x, y, VU_SEG, VU_H, col);
-        } else {
+        } 
+        
+        else 
+        {
             d.drawRect(x, y, VU_SEG, VU_H, 0x4208);
         }
         x += VU_STEP;
     }
 }
 
-void PlayingScene::onEnter(SceneManager& manager) {
+void PlayingScene::onEnter(SceneManager& manager) 
+{
     manager.display().markDirty();
 }
 
-void PlayingScene::draw(SceneManager& manager) {
+void PlayingScene::draw(SceneManager& manager) 
+{
     auto& display = manager.display();
     auto& audio   = manager.audio();
     String title  = audio.getStreamTitle();
 
-    if (title != _lastTitle) {
+    if (title != _lastTitle) 
+    {
         _lastTitle = title;
         _scrollPixel = 0;
     }
 
-    int16_t availW  = DisplaySystem::WIDTH - 2 * MARGIN;
+    int16_t availW  = DisplaySystem::SCREEN_WIDTH - 2 * MARGIN;
     bool needsScroll = (title.length() > 0);
     bool needsContinuous = needsScroll || (audio.state() == AudioSystem::State::Connected);
 
-    if (!needsContinuous) {
-        if (!display.isDirty() && title.length() > 0) return;
-    } else {
+    if (!needsContinuous) 
+    {
+        if (!display.isDirty() && title.length() > 0) {
+            return;
+        }
+    } 
+    else 
+    {
         uint32_t now = millis();
-        if (now - _lastFrameMs < FRAME_MS) return;
+        if (now - _lastFrameMs < FRAME_MS)  {
+            return;
+        }
+
         _lastFrameMs = now;
     }
 
     // --- Background ---
-    display.fillScreen(COLOR_BG);
-    display.setTextColor(TFT_WHITE);
+    display.clearScreen();
 
     // --- TOP BAR (GLCD) ---
-    display.unloadFont();
     display.reloadFont(5);
 
     String timeStr = manager.timeString();
@@ -71,19 +85,22 @@ void PlayingScene::draw(SceneManager& manager) {
     int16_t volW  = display.textWidth(volStr);
     int16_t nameW = display.textWidth(nameStr);
 
-    display.setCursor(2, 2);
-    display.print(timeStr);
+    display.drawText(2, 2, timeStr);
+    display.drawText(DisplaySystem::SCREEN_WIDTH - volW - 2, 2, volStr);
 
-    display.setCursor(DisplaySystem::WIDTH - volW - 2, 2);
-    display.print(volStr);
+    int16_t nameX = (DisplaySystem::SCREEN_WIDTH - nameW) / 2;
+    if (nameX < timeW + 4) 
+    {
+        nameX = timeW + 4;
+    }
+    
+    if (nameX + nameW > DisplaySystem::SCREEN_WIDTH - volW - 4) 
+    { 
+        nameX = DisplaySystem::SCREEN_WIDTH - volW - 4 - nameW;
+    }
 
-    int16_t nameX = (DisplaySystem::WIDTH - nameW) / 2;
-    if (nameX < timeW + 4) nameX = timeW + 4;
-    if (nameX + nameW > DisplaySystem::WIDTH - volW - 4) nameX = DisplaySystem::WIDTH - volW - 4 - nameW;
-    display.setCursor(nameX, 2);
-    display.print(nameStr);
-
-    display.drawHLine(0, 12, DisplaySystem::WIDTH, TFT_WHITE);
+    display.drawText(nameX, 2, nameStr);
+    display.drawHLine(0, 12, DisplaySystem::SCREEN_WIDTH, TFT_WHITE);
 
     // --- VU BARS ---
     int16_t vuX = VU_MARGIN;
@@ -97,37 +114,43 @@ void PlayingScene::draw(SceneManager& manager) {
     String info = WiFi.localIP().toString() + " | " + audio.getCodecname() + " | " + (audio.getBitRate() / 1000) + " kbps";
     int16_t infoW = display.textWidth(info);
 
-    display.drawHLine(0, 111, DisplaySystem::WIDTH, TFT_WHITE);
-    display.setCursor((DisplaySystem::WIDTH - infoW) / 2, 115);
-    display.print(info);
+    display.drawHLine(0, 111, DisplaySystem::SCREEN_WIDTH, TFT_WHITE);
+    display.drawText((DisplaySystem::SCREEN_WIDTH - infoW) / 2, 115, info);
 
     // --- STREAM TITLE (smooth font) ---
-    display.unloadFont();
     display.reloadFont(8);
     int16_t textW = display.textWidth(title);
     bool needsScrollLocal = (title.length() > 0 && textW > availW);
 
-    if (title.length() > 0) {
-        if (!needsScrollLocal) {
-            int16_t titleX = (DisplaySystem::WIDTH - textW) / 2;
-            if (titleX < MARGIN) titleX = MARGIN;
-            display.setCursor(titleX, TITLE_Y);
-            display.print(title);
-        } else {
+    if (title.length() > 0) 
+    {
+        if (!needsScrollLocal) 
+        {
+            int16_t titleX = (DisplaySystem::SCREEN_WIDTH - textW) / 2;
+            if (titleX < MARGIN) 
+            {
+                titleX = MARGIN;
+            }
+            display.drawText(titleX, TITLE_Y, title);
+        } 
+        else 
+        {
             int32_t wrapRange = textW + SCROLL_GAP;
             _scrollPixel += SCROLL_STEP;
-            if (_scrollPixel >= wrapRange) _scrollPixel -= wrapRange;
-
+            if (_scrollPixel >= wrapRange) 
+            { 
+                _scrollPixel -= wrapRange;
+            }
+            
             int16_t x1 = MARGIN - _scrollPixel;
             int16_t x2 = x1 + textW + SCROLL_GAP;
 
             display.setTextWrap(false);
-            display.setCursor(x1, TITLE_Y);
-            display.print(title);
+            display.drawText(x1, TITLE_Y, title);
 
-            if (x2 < DisplaySystem::WIDTH - MARGIN) {
-                display.setCursor(x2, TITLE_Y);
-                display.print(title);
+            if (x2 < DisplaySystem::SCREEN_WIDTH - MARGIN) 
+            {
+                display.drawText(x2, TITLE_Y, title);
             }
             display.setTextWrap(true);
         }
@@ -136,14 +159,20 @@ void PlayingScene::draw(SceneManager& manager) {
     display.flush();
 }
 
-void PlayingScene::handleEvent(RotarySystem::Event ev, SceneManager& manager) {
-    if (ev == RotarySystem::EV_CW) {
+void PlayingScene::handleEvent(RotarySystem::Event ev, SceneManager& manager) 
+{
+    if (ev == RotarySystem::RIGHT) 
+    {
         manager.audio().volumeUp();
         manager.display().markDirty();
-    } else if (ev == RotarySystem::EV_CCW) {
+    } 
+    else if (ev == RotarySystem::LEFT) 
+    {
         manager.audio().volumeDown();
         manager.display().markDirty();
-    } else if (ev == RotarySystem::EV_LONG) {
+    } 
+    else if (ev == RotarySystem::PRESS) 
+    {
         manager.switchTo(SceneId::StationList);
     }
 }

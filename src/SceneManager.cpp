@@ -3,37 +3,51 @@
 SceneManager::SceneManager(AudioSystem& audio, StationManager& stations, DisplaySystem& display)
     : _audio(audio), _stations(stations), _display(display) {}
 
-void SceneManager::begin() {
+void SceneManager::begin() 
+{
     switchTo(SceneId::Playing);
 }
 
-void SceneManager::draw() {
+void SceneManager::draw() 
+{
     currentScene().draw(*this);
 }
 
-void SceneManager::handleEvent(RotarySystem::Event ev) {
+void SceneManager::handleEvent(RotarySystem::Event ev) 
+{
     currentScene().handleEvent(ev, *this);
 }
 
-void SceneManager::switchTo(SceneId id) {
+void SceneManager::switchTo(SceneId id) 
+{
     currentScene().onExit();
     _currentId = id;
     currentScene().onEnter(*this);
 }
 
-void SceneManager::setTimeString(const String& time) {
+void SceneManager::setTimeString(const String& time)
+{
     _timeStr = time;
 }
 
-const String& SceneManager::timeString() const {
+const String& SceneManager::timeString() const 
+{
     return _timeStr;
 }
 
-Scene& SceneManager::currentScene() {
-    switch (_currentId) {
-        case SceneId::Playing:     return _playingScene;
-        case SceneId::StationList: return _stationListScene;
-        case SceneId::Loading:     return _loadingScene;
+Scene& SceneManager::currentScene() 
+{
+    switch (_currentId) 
+    {
+        case SceneId::Playing:     
+            return _playingScene;
+        
+        case SceneId::StationList: 
+            return _stationListScene;
+        
+        case SceneId::Loading:     
+            return _loadingScene;
     }
+    
     return _playingScene;
 }

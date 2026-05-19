@@ -13,8 +13,6 @@ private:
     String   _lastTitle;
     int16_t  _scrollPixel = 0;
     uint32_t _lastFrameMs = 0;
-
-
 };
 
 #endif

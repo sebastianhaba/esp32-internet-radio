@@ -11,7 +11,6 @@ public:
 
 private:
     uint32_t _startMs = 0;
-    static constexpr uint32_t TIMEOUT_MS = 5000;
 };
 
 #endif
