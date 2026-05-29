@@ -11,7 +11,7 @@ public:
 
     void clearScreen(uint16_t color = TFT_BLACK);
     void setTextWrap(bool wrap);
-    void drawText(uint8_t x, uint8_t y, const String& text, uint16_t color = TFT_WHITE);
+    void drawText(int16_t x, int16_t y, const String& text, uint16_t color = TFT_WHITE);
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void drawHLine(int16_t x, int16_t y, int16_t size, uint16_t color);

@@ -21,7 +21,7 @@ void DisplaySystem::setTextWrap(bool wrap) {
     _spr->setTextWrap(wrap);
 }
 
-void DisplaySystem::drawText(uint8_t x, uint8_t y, const String& text, uint16_t color) 
+void DisplaySystem::drawText(int16_t x, int16_t y, const String& text, uint16_t color) 
 {
     _spr->setCursor(x, y);
     _spr->setTextColor(color);
