@@ -2,7 +2,7 @@
 
 Internetowe radio na ESP32-S3 (Seeed XIAO) z wyświetlaczem ST7735 160×128.
 
-**Wersja:** 0.2.0
+**Wersja:** 0.3.0
 
 ---
 
@@ -103,7 +103,7 @@ bodmer/TFT_eSPI@^2.5.43
 ## Piny (Seeed XIAO ESP32S3)
 
 | Funkcja | Pin |
-|---|---|---|
+|---|---|
 | **Wyświetlacz ST7735** | |
 | TFT SCLK | D8 |
 | TFT MOSI | D10 |

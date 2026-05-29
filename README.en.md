@@ -2,7 +2,7 @@
 
 Internet radio built on ESP32-S3 (Seeed XIAO) with ST7735 160×128 display.
 
-**Version:** 0.1.0
+**Version:** 0.3.0
 
 ---
 
@@ -74,7 +74,7 @@ bodmer/TFT_eSPI@^2.5.43
 ## Pinout (Seeed XIAO ESP32S3)
 
 | Function | Pin |
-|---|---|---|
+|---|---|
 | **ST7735 Display** | |
 | TFT SCLK | D8 |
 | TFT MOSI | D10 |
