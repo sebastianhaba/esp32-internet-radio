@@ -10,8 +10,9 @@
 #include "PlayingScene.h"
 #include "StationListScene.h"
 #include "LoadingScene.h"
+#include "WiFiSetupScene.h"
 
-enum class SceneId { Playing, StationList, Loading };
+enum class SceneId { Playing, StationList, Loading, WiFiSetup };
 
 class SceneManager {
 public:
@@ -28,6 +29,7 @@ public:
     AudioSystem& audio() { return _audio; }
     StationManager& stations() { return _stations; }
     DisplaySystem& display() { return _display; }
+    WiFiSetupScene& wifiSetupScene();
 
 private:
     Scene& currentScene();
@@ -40,6 +42,7 @@ private:
     PlayingScene     _playingScene;
     StationListScene _stationListScene;
     LoadingScene     _loadingScene;
+    WiFiSetupScene   _wifiSetupScene;
 
     String _timeStr;
 };

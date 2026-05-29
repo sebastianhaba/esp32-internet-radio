@@ -2,9 +2,10 @@
 #include "StationManager.h"
 #include <LittleFS.h>
 
-void RadioWebServer::begin(StationManager* stations) 
+void RadioWebServer::begin(StationManager* stations, bool apMode) 
 {
     _stations = stations;
+    _apMode = apMode;
     _server.begin();
     Serial.println("Web server started on port 80");
 }
@@ -29,7 +30,6 @@ void RadioWebServer::handleClient()
         path   = req.substring(sp1 + 1, sp2);
     }
 
-    // Read headers
     String contentType;
     int contentLength = 0;
     while (client.connected()) 
@@ -46,7 +46,6 @@ void RadioWebServer::handleClient()
         }
     }
 
-    // Read body if any
     String body;
     if (contentLength > 0) 
     {
@@ -65,9 +64,21 @@ void RadioWebServer::handleClient()
     {
         handleSave(client, body);
     } 
+    else if (method == "GET" && path == "/api/status") 
+    {
+        handleApiStatus(client);
+    } 
+    else if (method == "POST" && path == "/api/wifi") 
+    {
+        handleApiWifi(client, body);
+    } 
+    else if (method == "GET" && path == "/api/wifi/scan") 
+    {
+        handleApiWifiScan(client);
+    } 
     else 
     {
-        send200(client, "text/plain", "404");
+        handleNotFound(client);
     }
 
     client.stop();
@@ -109,7 +120,6 @@ void RadioWebServer::handleSave(WiFiClient& client, const String& body)
         data = data.substring(9);
     }
 
-    // Full URL decode
     String decoded;
     decoded.reserve(data.length());
     for (unsigned i = 0; i < data.length(); i++) 
@@ -175,6 +185,91 @@ void RadioWebServer::handleSave(WiFiClient& client, const String& body)
 
     send200(client, "text/plain", "OK");
     Serial.println("Stations saved and reloaded");
+}
+
+void RadioWebServer::handleApiStatus(WiFiClient& client) 
+{
+    String json;
+    if (_apMode) 
+    {
+        json = "{\"mode\":\"ap\",\"ssid\":\"" + WiFi.softAPSSID() + "\",\"ip\":\"" + WiFi.softAPIP().toString() + "\",\"configured\":false}";
+    } 
+    else 
+    {
+        bool configured = (WiFi.status() == WL_CONNECTED);
+        json = "{\"mode\":\"sta\",\"ssid\":\"" + WiFi.SSID() + "\",\"ip\":\"" + WiFi.localIP().toString() + "\",\"configured\":true}";
+    }
+    send200(client, "application/json", json);
+}
+
+void RadioWebServer::handleApiWifi(WiFiClient& client, const String& body) 
+{
+    String ssid, password;
+
+    int ssidStart = body.indexOf("\"ssid\":\"");
+    if (ssidStart >= 0) 
+    {
+        ssidStart += 8;
+        int ssidEnd = body.indexOf("\"", ssidStart);
+        if (ssidEnd > ssidStart) 
+        {
+            ssid = body.substring(ssidStart, ssidEnd);
+        }
+    }
+
+    int passStart = body.indexOf("\"password\":\"");
+    if (passStart >= 0) 
+    {
+        passStart += 12;
+        int passEnd = body.indexOf("\"", passStart);
+        if (passEnd > passStart) 
+        {
+            password = body.substring(passStart, passEnd);
+        }
+    }
+
+    if (ssid.length() == 0) 
+    {
+        send200(client, "text/plain", "Missing SSID");
+        return;
+    }
+
+    String json = "{\"ssid\":\"" + ssid + "\",\"password\":\"" + password + "\"}";
+    File f = LittleFS.open("/wifi.txt", "w");
+    if (!f) 
+    {
+        send200(client, "text/plain", "Write error");
+        return;
+    }
+    f.print(json);
+    f.close();
+
+    Serial.println("WiFi config saved, restarting...");
+    send200(client, "text/plain", "OK");
+
+    client.flush();
+    delay(500);
+    ESP.restart();
+}
+
+void RadioWebServer::handleApiWifiScan(WiFiClient& client) 
+{
+    int n = WiFi.scanNetworks();
+    String json = "[";
+    for (int i = 0; i < n; i++) 
+    {
+        if (i > 0) json += ",";
+        json += "{\"ssid\":\"" + WiFi.SSID(i) + "\",\"rssi\":" + String(WiFi.RSSI(i));
+        json += ",\"secure\":" + String(WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "true" : "false") + "}";
+    }
+    json += "]";
+    WiFi.scanDelete();
+    send200(client, "application/json", json);
+}
+
+void RadioWebServer::handleNotFound(WiFiClient& client) 
+{
+    client.print("HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n404");
 }
 
 void RadioWebServer::send200(WiFiClient& client, const char* type, const String& body) 

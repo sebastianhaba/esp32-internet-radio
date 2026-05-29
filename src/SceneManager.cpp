@@ -47,7 +47,14 @@ Scene& SceneManager::currentScene()
         
         case SceneId::Loading:     
             return _loadingScene;
+        
+        case SceneId::WiFiSetup:   
+            return _wifiSetupScene;
     }
     
     return _playingScene;
+}
+
+WiFiSetupScene& SceneManager::wifiSetupScene() {
+    return _wifiSetupScene;
 }

@@ -1,33 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ESP32 Radio Config</title>
 <style>
-body{font-family:monospace;background:#111;color:#0f0;padding:10px}
-textarea{width:100%;height:60vh;background:#222;color:#0f0;border:1px solid #0f0;
-  padding:5px;resize:vertical}
-button{padding:10px 20px;margin-top:10px;background:#0f0;color:#000;border:none;
-  cursor:pointer}
-#msg{margin-top:10px}
+body{font-family:monospace;background:#111;color:#BBB;padding:15px;font-size:14px;max-width:600px;margin:0 auto}
+h1{color:#0f0;font-size:20px;margin:0 0 15px 0}
+h2{color:#0f0;font-size:16px;margin:15px 0 8px 0}
+label{display:block;margin:8px 0 3px 0;color:#AAA}
+input[type=text],input[type=password]{width:100%;padding:6px;background:#222;color:#0f0;border:1px solid #0f0;box-sizing:border-box}
+textarea{width:100%;height:40vh;background:#222;color:#0f0;border:1px solid #0f0;padding:5px;resize:vertical;box-sizing:border-box}
+button{padding:8px 18px;margin:8px 4px 0 0;background:#0f0;color:#000;border:none;cursor:pointer;font-family:monospace;font-size:13px}
+button:disabled{opacity:.5}
+#msg,#wifiMsg{margin-top:8px;color:#0f0}
+#scanList{margin-top:6px;background:#222;border:1px solid #0f0;max-height:150px;overflow-y:auto}
+#scanList div{padding:5px 8px;cursor:pointer;border-bottom:1px solid #333}
+#scanList div:hover{background:#333}
+.statusBar{background:#222;padding:8px;margin-bottom:12px;border-left:3px solid #0f0;font-size:12px}
+.separator{border:0;border-top:1px solid #333;margin:18px 0}
 </style>
 </head>
 <body>
-<h1>Radio Stations</h1>
+
+<h1>ESP32 Radio</h1>
+<div class="statusBar" id="statusBar">Sprawdzanie statusu...</div>
+
+<div id="wifiSection">
+<h2>Konfiguracja WiFi</h2>
+<label>SSID</label>
+<input type="text" id="ssid" placeholder="Nazwa sieci WiFi">
+
+<label>Haslo</label>
+<input type="password" id="password" placeholder="Haslo do sieci WiFi">
+
+<div>
+<button id="scanBtn" onclick="scanWifi()">Skanuj sieci</button>
+<button id="wifiSaveBtn" onclick="saveWifi()">Zapisz i restartuj</button>
+</div>
+<div id="wifiMsg"></div>
+<div id="scanList"></div>
+</div>
+
+<hr class="separator">
+
+<div id="stationsSection">
+<h2>Stacje radiowe</h2>
 <form id="f">
-<textarea id="s" name="stations"></textarea>
+<textarea id="s" name="stations" placeholder="Nazwa|URL"></textarea>
 <br>
-<button type="submit">Save &amp; Reload</button>
+<button type="submit">Zapisz &amp; Przeladuj</button>
 </form>
 <div id="msg"></div>
+</div>
+
 <script>
-fetch('/stations').then(r=>r.text()).then(t=>document.getElementById('s').value=t);
-document.getElementById('f').addEventListener('submit',async e=>{
- e.preventDefault();
- const r=await fetch('/save',{method:'POST',body:new URLSearchParams(new FormData(e.target))});
- document.getElementById('msg').textContent=r.ok?'Saved and reloaded!':'Error saving';
+let mode = 'unknown';
+
+fetch('/api/status').then(r=>r.json()).then(s=>{
+  mode = s.mode;
+  let bar = document.getElementById('statusBar');
+  if (s.mode === 'ap') {
+    bar.innerHTML = '<b>Tryb AP</b> | AP: ' + s.ssid + ' | IP: ' + s.ip + ' | Haslo: radio123';
+  } else {
+    bar.innerHTML = '<b>Tryb STA</b> | Siec: ' + s.ssid + ' | IP: ' + s.ip;
+  }
+}).catch(()=>{
+  document.getElementById('statusBar').innerHTML = 'Blad ladowania statusu';
 });
+
+fetch('/stations').then(r=>r.text()).then(t=>document.getElementById('s').value=t);
+
+document.getElementById('f').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const r=await fetch('/save',{method:'POST',body:new URLSearchParams(new FormData(e.target))});
+  document.getElementById('msg').textContent=r.ok?'Zapisano i przeladowano!':'Blad zapisu';
+});
+
+function scanWifi() {
+  document.getElementById('wifiMsg').textContent = 'Skanowanie...';
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('scanList').innerHTML = '';
+
+  fetch('/api/wifi/scan').then(r=>r.json()).then(nets=>{
+    let list = document.getElementById('scanList');
+    list.innerHTML = '';
+    if (nets.length === 0) {
+      list.innerHTML = '<div>Brak znalezionych sieci</div>';
+    } else {
+      nets.forEach(n=>{
+        let d = document.createElement('div');
+        let lock = n.secure ? ' 🔒' : '';
+        d.textContent = n.ssid + lock + ' (' + n.rssi + ' dBm)';
+        d.onclick = ()=>{ document.getElementById('ssid').value = n.ssid; list.innerHTML = ''; };
+        list.appendChild(d);
+      });
+    }
+    document.getElementById('scanBtn').disabled = false;
+    document.getElementById('wifiMsg').textContent = 'Znaleziono ' + nets.length + ' sieci';
+  }).catch(()=>{
+    document.getElementById('wifiMsg').textContent = 'Blad skanowania';
+    document.getElementById('scanBtn').disabled = false;
+  });
+}
+
+function saveWifi() {
+  let ssid = document.getElementById('ssid').value.trim();
+  let pass = document.getElementById('password').value;
+  let msg = document.getElementById('wifiMsg');
+
+  if (!ssid) { msg.textContent = 'Podaj SSID'; return; }
+
+  msg.textContent = 'Zapisywanie...';
+  document.getElementById('wifiSaveBtn').disabled = true;
+
+  fetch('/api/wifi', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ssid:ssid,password:pass})
+  }).then(r=>r.text()).then(t=>{
+    if (t === 'OK') {
+      msg.textContent = 'Zapisano! Restartowanie...';
+      setTimeout(()=>{ window.location.href = '/'; }, 3000);
+    } else {
+      msg.textContent = 'Blad: ' + t;
+      document.getElementById('wifiSaveBtn').disabled = false;
+    }
+  }).catch(()=>{
+    msg.textContent = 'Blad polaczenia';
+    document.getElementById('wifiSaveBtn').disabled = false;
+  });
+}
 </script>
 </body>
 </html>
