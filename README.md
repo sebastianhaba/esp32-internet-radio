@@ -2,13 +2,23 @@
 
 Internetowe radio na ESP32-S3 (Seeed XIAO) z wyświetlaczem ST7735 160×128.
 
-**Wersja:** 0.1.0
+**Wersja:** 0.2.0
 
 ---
 
-## Zrzut ekranu
+## Zrzuty ekranu
 
 ![Radio w akcji](docs/1.gif)
+
+### Konfiguracja WiFi przez portal WWW
+
+Ekran w trybie AP (brak konfiguracji WiFi) i formularz konfiguracji:
+
+![Ekran AP](docs/wifi_1.jpg) ![Strona WiFi](docs/wifi_2.jpg)
+
+Skanowanie sieci i widok strony w trybie STA:
+
+![Skanowanie](docs/wifi_3.jpg) ![Strona STA](docs/wifi_4.jpg)
 
 ---
 
@@ -20,9 +30,28 @@ Internetowe radio na ESP32-S3 (Seeed XIAO) z wyświetlaczem ST7735 160×128.
 - VU Meter — wizualizacja poziomu dźwięku (L+P kanał, 15 segmentów, zielony/żółty/czerwony)
 - Regulacja głośności enkoderem
 - Wyświetlanie czasu (NTP), adresu IP, kodeka i bitrate
- - Obsługa stacji bez metadanych (np. Polskie Radio Trójka)
- - Stacje konfigurowane przez plik `data/stations.txt` na LittleFS — bez rekompilacji
- - Konfiguracja stacji przez interfejs WWW — edytor w przeglądarce, zapis bez restartu
+- Obsługa stacji bez metadanych (np. Polskie Radio Trójka)
+- Stacje konfigurowane przez plik `data/stations.txt` na LittleFS — bez rekompilacji
+- Konfiguracja stacji przez interfejs WWW — edytor w przeglądarce, zapis bez restartu
+- **Konfiguracja WiFi przez portal webowy** — brak potrzeby podawania SSID/hasła w kodzie
+
+---
+
+## Pierwsze uruchomienie — konfiguracja WiFi
+
+Radio nie wymaga podawania SSID i hasła w kodzie. Przy pierwszym uruchomieniu:
+
+1. Radio sprawdza czy istnieje plik `/wifi.txt` na LittleFS z zapisanymi danymi WiFi
+2. Jeśli pliku nie ma (lub dane są błędne) — radio przechodzi w **tryb AP**
+3. Na wyświetlaczu LCD pojawia się adres IP `192.168.100.1` oraz nazwa AP `ESP32-Radio-XXXX`
+4. Połącz się z siecią `ESP32-Radio-XXXX` (hasło: `radio123`)
+5. Otwórz w przeglądarce `http://192.168.100.1`
+6. Wpisz SSID i hasło swojej sieci WiFi, kliknij **Zapisz i restartuj**
+7. Radio zapisuje konfigurację, restartuje się i łączy z Twoją siecią
+
+Po udanym połączeniu radio działa normalnie — otwórz w przeglądarce adres IP widoczny na pasku stanu strony (na dole ekranu radia), aby edytować stacje lub zmienić WiFi.
+
+**Jeśli połączenie WiFi nie powiedzie się w ciągu 30 sekund** (np. zmieniłeś hasło routera), radio automatycznie wraca do trybu AP, abyś mógł podać poprawne dane.
 
 ---
 
@@ -45,9 +74,9 @@ pio run -t uploadfs
 
 Jeśli plik `stations.txt` nie istnieje, radio użyje wbudowanych stacji zapasowych.
 
-### Edycja stacji przez WWW
+### Edycja przez portal WWW
 
-Po połączeniu z WiFi otwórz w przeglądarce adres IP radia (widoczny na dole ekranu i w Serial Monitorze). Strona umożliwia edycję listy stacji — po kliknięciu **Save & Reload** lista jest natychmiast aktualizowana bez restartu urządzenia.
+Po połączeniu z WiFi otwórz w przeglądarce adres IP radia (widoczny na dole ekranu i w Serial Monitorze). Ta sama strona umożliwia edycję listy stacji oraz zmianę konfiguracji WiFi. Po kliknięciu **Zapisz & Przeladuj** lista stacji jest natychmiast aktualizowana bez restartu urządzenia.
 
 ---
 
